@@ -2,9 +2,15 @@ package com.xeoneux.popularmovies;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,6 +22,8 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
 
+    GridView gridView;
+    PosterAdapter posterAdapter;
     ArrayList<Movie> movies = new ArrayList<>();
     AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
 
@@ -25,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         fetchMovies("popular");
+        gridView = (GridView) findViewById(R.id.grid_view);
+        posterAdapter = new PosterAdapter();
+        gridView.setAdapter(posterAdapter);
     }
 
     void fetchMovies(String sortCriteria) {
@@ -58,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                } finally {
+                    posterAdapter.notifyDataSetChanged();
+                    gridView.setAdapter(posterAdapter);
                 }
             }
 
@@ -66,5 +80,43 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public class PosterAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return movies.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return movies.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            ImageView imageView = (ImageView) convertView;
+
+            if (imageView == null) {
+                imageView = new ImageView(getApplicationContext());
+            }
+
+            Movie movie = (Movie) getItem(position);
+            String poster = movie.moviePoster;
+            String url = "https://image.tmdb.org/t/p/w500/" + poster;
+
+            Picasso
+                    .with(getApplicationContext())
+                    .load(url)
+                    .into(imageView);
+
+            return imageView;
+        }
     }
 }
